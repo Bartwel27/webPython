@@ -1,91 +1,200 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Python Runner with Skulpt</title>
-    <!-- jQuery (optional, but kept from original) -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Python Runner · Skulpt</title>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.0/jquery.min.js"></script>
-    <!-- Skulpt core and standard library -->
     <script src="https://skulpt.org/js/skulpt.min.js" type="text/javascript"></script>
     <script src="https://skulpt.org/js/skulpt-stdlib.js" type="text/javascript"></script>
     <style>
-        body {
-            font-family: monospace;
-            margin: 20px;
+        :root {
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --panel-2: #273449;
+            --border: #334155;
+            --text: #e2e8f0;
+            --muted: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #0ea5e9;
+            --ok: #22c55e;
+            --err: #f87171;
         }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            padding: 32px 16px;
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1e293b 0%, var(--bg) 60%);
+            color: var(--text);
+            font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+        }
+        .wrap { max-width: 900px; margin: 0 auto; }
+        header { margin-bottom: 24px; }
+        h1 {
+            font-size: 1.6rem;
+            margin: 0 0 6px;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        h1 span { color: var(--accent); }
+        .subtitle { color: var(--muted); font-size: 0.9rem; margin: 0; }
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+        }
+        .card-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            resize: vertical;
+            background: #0b1120;
+            color: #e2e8f0;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 14px;
+            line-height: 1.55;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+        textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.15);
+        }
+        .toolbar {
+            display: flex;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        button {
+            background: var(--accent);
+            color: #0b1120;
+            border: none;
+            border-radius: 8px;
+            padding: 10px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.15s, transform 0.05s;
+        }
+        button:hover { background: var(--accent-hover); }
+        button:active { transform: translateY(1px); }
+        button.ghost {
+            background: transparent;
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+        button.ghost:hover { background: var(--panel-2); }
         #output {
-            background: #f4f4f4;
-            padding: 10px;
-            border: 1px solid #ccc;
-            min-height: 50px;
+            background: #0b1120;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            min-height: 60px;
             white-space: pre-wrap;
+            word-break: break-word;
+            font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            color: #cbd5e1;
+            margin: 0;
+        }
+        #output:empty::before {
+            content: "Output will appear here…";
+            color: var(--muted);
+            font-style: italic;
         }
         #mycanvas {
-            margin-top: 10px;
-            border: 1px solid #aaa;
+            margin-top: 12px;
+            background: white;
+            border-radius: 8px;
+            min-height: 0;
+            overflow: hidden;
+        }
+        #mycanvas:empty { display: none; }
+        footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 0.8rem;
+            margin-top: 24px;
         }
     </style>
 </head>
 <body>
+<div class="wrap">
+    <header>
+        <h1>Python Runner · <span>Skulpt</span></h1>
+        <p class="subtitle">Lightweight in-browser Python with Turtle graphics — fast to load.</p>
+    </header>
 
-<h3>Try This Python Code</h3>
-<form>
-    <textarea id="yourcode" cols="60" rows="12">
+    <div class="card">
+        <div class="card-label">Code</div>
+        <textarea id="yourcode" spellcheck="false">import turtle
 
-    </textarea><br />
-    <button type="button" onclick="runit()">Run</button>
-</form>
-<pre id="output"></pre>
-<!-- Canvas for turtle graphics -->
-<div id="mycanvas"></div>
+t = turtle.Turtle()
+for _ in range(4):
+    t.forward(100)
+    t.right(90)
+
+print("Hello World")
+print("Square drawn!")</textarea>
+        <div class="toolbar">
+            <button onclick="runit()">▶ Run</button>
+            <button class="ghost" onclick="clearAll()">Clear</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-label">Output</div>
+        <pre id="output"></pre>
+        <div id="mycanvas"></div>
+    </div>
+
+    <footer>Powered by Skulpt · Best for basic scripts &amp; Turtle</footer>
+</div>
 
 <script type="text/javascript">
-    // Output function: appends text to the <pre> element
     function outf(text) {
-        var mypre = document.getElementById("output");
-        mypre.innerHTML = mypre.innerHTML + text;
+        const mypre = document.getElementById("output");
+        mypre.textContent += text;
     }
-
-    // Builtin file reader for Skulpt
     function builtinRead(x) {
-        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined) {
+        if (Sk.builtinFiles === undefined || Sk.builtinFiles["files"][x] === undefined)
             throw "File not found: '" + x + "'";
-        }
         return Sk.builtinFiles["files"][x];
     }
-
-    // Main run function
+    function clearAll() {
+        document.getElementById("output").textContent = "";
+        document.getElementById("mycanvas").innerHTML = "";
+    }
     function runit() {
-        var prog = document.getElementById("yourcode").value;
-        var mypre = document.getElementById("output");
-        mypre.innerHTML = '';  // Clear output
-
-        // Configure Skulpt
-        Sk.configure({
-            output: outf,
-            read: builtinRead,
-            // Enable turtle graphics (target is the div id)
-            __future__: Sk.python3
-        });
-
-        // Set up turtle graphics target
+        const prog = document.getElementById("yourcode").value;
+        clearAll();
+        Sk.pre = "output";
+        Sk.configure({ output: outf, read: builtinRead, __future__: Sk.python3 });
         (Sk.TurtleGraphics || (Sk.TurtleGraphics = {})).target = 'mycanvas';
-
-        // Use asyncToPromise for proper async execution
-        var myPromise = Sk.misceval.asyncToPromise(function() {
+        Sk.misceval.asyncToPromise(function () {
             return Sk.importMainWithBody("<stdin>", false, prog, true);
-        });
-
-        myPromise.then(function(mod) {
-            console.log('Program finished successfully');
-        }, function(err) {
-            // Display error in the output area
-            var errorMsg = err.toString();
-            document.getElementById("output").innerHTML += "\nError: " + errorMsg;
-            console.error(err);
+        }).then(function () {
+            console.log('success');
+        }, function (err) {
+            document.getElementById("output").textContent += "\nError: " + err.toString();
         });
     }
 </script>
-
 </body>
 </html>
